@@ -24,6 +24,7 @@ static void get_process_name(char *ouput_name)
 static ssize_t mailbox_read(struct kobject *kobj,
                             struct kobj_attribute *attr, char *buf)
 {
+
 	return ERR_EMPTY;
 }
 
@@ -38,6 +39,10 @@ static int __init mailbox_init(void)
 	printk("Insert\n");
 	hw2_kobject = kobject_create_and_add("hw2", kernel_kobj);
 	sysfs_create_file(hw2_kobject, &mailbox_attribute.attr);
+	char* buffer;
+	size_t count;
+	mailbox_read(hw2_kobject, &mailbox_attribute.attr, buffer)
+	mailbox_write(hw2_kobject, &mailbox_attribute.attr, buffer, &count)
 	return 0;
 }
 
