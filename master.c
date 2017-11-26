@@ -4,31 +4,31 @@
 int main(int argc, char **argv)
 {
 	char ch;
-    char* word;
-    char* directory;
-    int K=1;
-    while ((ch = getopt(argc, argv, "q:d:s:")) != EOF) {
-        switch (ch) {
-        case 'q':
-            printf("-q %s\r\n", optarg);
-            word=optarg;
-            break;
-        case 'd':
-            printf("-d %s\r\n", optarg);
-            directory=optarg;
+	char* word;
+	char* directory;
+	int K=1;
+	while ((ch = getopt(argc, argv, "q:d:s:")) != EOF) {
+		switch (ch) {
+		case 'q':
+			printf("-q %s\r\n", optarg);
+			word=optarg;
+			break;
+		case 'd':
+			printf("-d %s\r\n", optarg);
+			directory=optarg;
 			break;
 		case 's':
-            printf("-s %s\r\n", optarg);
-            K=atoi(optarg);
+			printf("-s %s\r\n", optarg);
+			K=atoi(optarg);
 			break;
-        default:
-            fprintf(stderr, "Unknown option: '%s'\n", optarg);
-            return 1;
-        }
+		default:
+			fprintf(stderr, "Unknown option: '%s'\n", optarg);
+			return 1;
+		}
 
-    }
-    printf("%s\n",word);
-    printf("%s\n",directory);
+	}
+	printf("%s\n",word);
+	printf("%s\n",directory);
 	printf("%d\n",K);
 	struct mail_t *mail;
 	mail.query_word=word;
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 	send_to_fd(sysfs_fd, &mail);
 	read_from_fd(sysfs_fd, &mail);
 	close(f);
-    return 0;
+	return 0;
 }
 int send_to_fd(int sysfs_fd, struct mail_t *mail)
 {
