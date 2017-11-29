@@ -1,11 +1,16 @@
 #include "master.h"
 #include "stdlib.h"
+#include "stdio.h"
 #include "unistd.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include "string.h"
 int main(int argc, char **argv)
 {
 	char ch;
-	char* word;
-	char* directory;
+	char* word='\0';
+	char* directory='\0';
 	int K=1;
 	while ((ch = getopt(argc, argv, "q:d:s:")) != EOF) {
 		switch (ch) {
@@ -27,16 +32,16 @@ int main(int argc, char **argv)
 		}
 
 	}
-	printf("%s\n",word);
-	printf("%s\n",directory);
-	printf("%d\n",K);
-	struct mail_t *mail;
-	mail.query_word=word;
-	mail.file_path=directory;
-	int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_WRONLY|O_CREAT, 0700);
+	struct mail_t mail;
+	strcpy(mail.data.query_word,word);
+	strcpy(mail.file_path,directory);
+	//printf("%s\n", mail.data.query_word);
+	//printf("%s\n", mail.file_path);
+	int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
+	//printf("%d\n", sysfs_fd);
 	send_to_fd(sysfs_fd, &mail);
-	read_from_fd(sysfs_fd, &mail);
-	close(f);
+	//read_from_fd(sysfs_fd, &mail);
+	close(sysfs_fd);
 	return 0;
 }
 int send_to_fd(int sysfs_fd, struct mail_t *mail)
@@ -45,7 +50,8 @@ int send_to_fd(int sysfs_fd, struct mail_t *mail)
 	 * write something or nothing
 	 */
 
-	int ret_val = write(sysfs_fd, &mail, sizeof(struct mail_t));
+	int ret_val = write(sysfs_fd, mail, sizeof(struct mail_t));
+	printf("%d\n",ret_val);
 	if (ret_val == ERR_FULL) {
 		/*
 		 * write something or nothing
@@ -66,7 +72,7 @@ int receive_from_fd(int sysfs_fd, struct mail_t *mail)
 	 * write something or nothing
 	 */
 
-	int ret_val = read(sysfs_fd, &mail, sizeof(struct mail_t));
+	int ret_val = read(sysfs_fd, mail, sizeof(struct mail_t));
 	if (ret_val == ERR_EMPTY) {
 		/*
 		 * write something or nothing

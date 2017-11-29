@@ -26,10 +26,7 @@ struct mailbox_entry_t {
 	/*
 	 * some structure members you define
 	 */
-	union {
-		char query_word[32];
-		unsigned int word_count;
-	} data;
+	char query_word[32];
 
 	char file_path[4096];
 
