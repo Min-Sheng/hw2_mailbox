@@ -56,9 +56,7 @@ int send_to_fd(int sysfs_fd, struct mail_t *mail)
 	printf("%d\n",ret_val);
 	if (ret_val < 0) {
 		printf("The mailbox is full.\n");
-	}
-	else
-	{
+	} else {
 		/*
 		 * write something or nothing
 		 */
