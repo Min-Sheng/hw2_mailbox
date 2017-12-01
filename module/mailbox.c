@@ -40,8 +40,8 @@ static ssize_t mailbox_write(struct kobject *kobj,
 	list_add_tail(&mail_entry_ptr->entry,&mail_head.head);
 	/*
 	list_for_each_entry(mail_head, &mail_head.head, head) {
-        printk("Query_Word: %s; File_Path: %s\n", mail_entry_ptr->mail.data.query_word, mail_entry_ptr->mail.file_path);
-    }
+	    printk("Query_Word: %s; File_Path: %s\n", mail_entry_ptr->mail.data.query_word, mail_entry_ptr->mail.file_path);
+	}
 	*/
 	printk("%s\n", mail_entry_ptr->mail.data.query_word);
 	printk("%s\n", mail_entry_ptr->mail.file_path);
