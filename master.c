@@ -39,6 +39,8 @@ int main(int argc, char **argv)
 	//printf("%s\n", mail.file_path);
 	int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
 	//printf("%d\n", sysfs_fd);
+	//int ret_val = write(sysfs_fd, &mail, sizeof(struct mail_t));
+	//printf("%d\n",ret_val);
 	send_to_fd(sysfs_fd, &mail);
 	//read_from_fd(sysfs_fd, &mail);
 	close(sysfs_fd);
@@ -52,11 +54,11 @@ int send_to_fd(int sysfs_fd, struct mail_t *mail)
 
 	int ret_val = write(sysfs_fd, mail, sizeof(struct mail_t));
 	printf("%d\n",ret_val);
-	if (ret_val == ERR_FULL) {
-		/*
-		 * write something or nothing
-		 */
-	} else {
+	if (ret_val < 0) {
+		printf("The mailbox is full.\n");
+	}
+	else
+	{
 		/*
 		 * write something or nothing
 		 */
@@ -73,7 +75,7 @@ int receive_from_fd(int sysfs_fd, struct mail_t *mail)
 	 */
 
 	int ret_val = read(sysfs_fd, mail, sizeof(struct mail_t));
-	if (ret_val == ERR_EMPTY) {
+	if (ret_val < 0) {
 		/*
 		 * write something or nothing
 		 */
