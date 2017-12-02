@@ -1,10 +1,18 @@
 #include "slave.h"
-
+#include "stdlib.h"
+#include "stdio.h"
+#include "unistd.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include "string.h"
 int main(int argc, char **argv)
 {
-	/*
-	 * write something or nothing
-	 */
+	struct mail_t mail;
+	int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
+	receive_from_fd(sysfs_fd, &mail);
+	close(sysfs_fd);
+	return 0;
 }
 
 int send_to_fd(int sysfs_fd, struct mail_t *mail)
@@ -14,14 +22,11 @@ int send_to_fd(int sysfs_fd, struct mail_t *mail)
 	 */
 
 	int ret_val = write(sysfs_fd, mail, sizeof(struct mail_t));
-	if (ret_val == ERR_FULL) {
-		/*
-		 * write something or nothing
-		 */
+	if (ret_val < 0) {
+		printf("The mailbox is full.\n");
+		return -1;
 	} else {
-		/*
-		 * write something or nothing
-		 */
+		return 0;
 	}
 
 	/*
@@ -36,17 +41,13 @@ int receive_from_fd(int sysfs_fd, struct mail_t *mail)
 	 */
 
 	int ret_val = read(sysfs_fd, mail, sizeof(struct mail_t));
-	if (ret_val == ERR_EMPTY) {
-		/*
-		 * write something or nothing
-		 */
+	printf("%d\n", ret_val);
+	if (ret_val < 0) {
+		printf("The mailbox is empty.\n");
+		return -1;
 	} else {
-		/*
-		 * write something or nothing
-		 */
+		printf("%s\n",mail->data.query_word);
+		printf("%s\n",mail->file_path);
+		return 0;
 	}
-
-	/*
-	 * write something or nothing
-	 */
 }
