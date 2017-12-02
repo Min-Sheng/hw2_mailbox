@@ -20,10 +20,11 @@ static void get_process_name(char *ouput_name)
 {
 	memcpy(ouput_name, current->comm, sizeof(current->comm));
 }
-int list_full(const struct list_head *head){
+int list_full(const struct list_head *head)
+{
 	int number = 0;
 	struct list_head *pos;
-	for (pos = (head)->next; pos != (head); pos = pos->next){
+	for (pos = (head)->next; pos != (head); pos = pos->next) {
 		number++;
 	}
 	//printk("%d\n",number);
@@ -34,10 +35,10 @@ static ssize_t mailbox_read(struct kobject *kobj,
 {
 	char process_name[100];
 	get_process_name(process_name);
-	if (list_empty(&mail_head_ptr->head)){
-			return ERR_EMPTY;
-	}else{
-		if(strcmp(process_name,"slave")==0){
+	if (list_empty(&mail_head_ptr->head)) {
+		return ERR_EMPTY;
+	} else {
+		if(strcmp(process_name,"slave")==0) {
 			struct list_head *ptr;
 			struct mailbox_entry_t *e;
 			ptr = mail_head_ptr->head.next;
@@ -47,7 +48,7 @@ static ssize_t mailbox_read(struct kobject *kobj,
 			//copy_to_user(buf, &mail_temp, sizeof(struct mail_t));
 			//list_del(&e->entry);
 			return 0;
-		}else if(strcmp(process_name,"master")==0){
+		} else if(strcmp(process_name,"master")==0) {
 			struct list_head *ptr;
 			struct mailbox_entry_t *e;
 			ptr = mail_head_ptr->head.next;
@@ -56,7 +57,7 @@ static ssize_t mailbox_read(struct kobject *kobj,
 			//copy_to_user(buf, &mail_temp, sizeof(struct mail_t));
 			//list_del(&e->entry);
 			return 0;
-		}else{
+		} else {
 			return -1;
 		}
 	}
@@ -67,10 +68,10 @@ static ssize_t mailbox_write(struct kobject *kobj,
 {
 	char process_name[100];
 	get_process_name(process_name);
-	if (list_full(&mail_head_ptr->head)){
-			return ERR_FULL;
-	}else{
-		if(strcmp(process_name,"master")==0){
+	if (list_full(&mail_head_ptr->head)) {
+		return ERR_FULL;
+	} else {
+		if(strcmp(process_name,"master")==0) {
 			struct mailbox_entry_t *mail_entry_ptr;
 			mail_entry_ptr=kmalloc(sizeof(struct mailbox_entry_t), GFP_KERNEL);
 			memcpy(&mail_entry_ptr->mail, buf, sizeof(struct mail_t));
@@ -84,9 +85,9 @@ static ssize_t mailbox_write(struct kobject *kobj,
 			}
 			*/
 			return 0;
-		}else if(strcmp(process_name,"slave")==0){
+		} else if(strcmp(process_name,"slave")==0) {
 			return 0;
-		}else{
+		} else {
 			return -1;
 		}
 	}
