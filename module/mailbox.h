@@ -12,6 +12,7 @@
 #include <linux/fs.h>
 #include <linux/spinlock_types.h>
 #include <linux/slab.h>
+#include <linux/uaccess.h>
 #define ERR_EMPTY -1
 #define ERR_FULL -2
 
