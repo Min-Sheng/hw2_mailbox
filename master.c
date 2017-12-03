@@ -10,7 +10,6 @@
 void find_path(char* directory, char (*path)[4096], int i);
 int main(int argc, char **argv)
 {
-	struct mail_t mail;
 	char ch;
 	char* word='\0';
 	char* directory='\0';
@@ -38,17 +37,17 @@ int main(int argc, char **argv)
 	}
 	int i = 0;
 	find_path(directory, path, i);
+	int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
 	i = 0;
 	while (strcmp(path[i],"")!=0) {
+		struct mail_t mail;
+		strcpy(mail.data.query_word, word);
+		strcpy(mail.file_path, path[i]);
+		send_to_fd(sysfs_fd, &mail);
 		printf("%s\n", path[i]);
 		i++;
 	}
-
-	//strcpy(mail.data.query_word, word);
-	//strcpy(mail.file_path, path);
-	//int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
-	//send_to_fd(sysfs_fd, &mail);
-	//close(sysfs_fd);
+	close(sysfs_fd);
 	//int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
 	//receive_from_fd(sysfs_fd, &mail);
 	//close(sysfs_fd);
