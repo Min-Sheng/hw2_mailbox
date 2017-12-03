@@ -39,8 +39,7 @@ int main(int argc, char **argv)
 	int i = 0;
 	find_path(directory, path, i);
 	i = 0;
-	while (strcmp(path[i],"")!=0)
-	{
+	while (strcmp(path[i],"")!=0) {
 		printf("%s\n", path[i]);
 		i++;
 	}
@@ -91,34 +90,32 @@ int receive_from_fd(int sysfs_fd, struct mail_t *mail)
 	}
 }
 
-void find_path(char* directory, char(*path)[4096],int i){
+void find_path(char* directory, char(*path)[4096],int i)
+{
 	DIR* dir;
 	struct dirent *ent;
-	if ((dir = opendir(directory)) != NULL)
-	{
-		while (( ent = readdir(dir)) != NULL){
-      		if(ent->d_type == DT_DIR && strcmp(ent->d_name, ".") != 0  && strcmp(ent->d_name, "..") != 0){
+	if ((dir = opendir(directory)) != NULL) {
+		while (( ent = readdir(dir)) != NULL) {
+			if(ent->d_type == DT_DIR && strcmp(ent->d_name, ".") != 0
+			   && strcmp(ent->d_name, "..") != 0) {
 				char p[4096] ;
 				int last = strlen(directory);
-				if(directory[last-1]=='/'){
+				if(directory[last-1]=='/') {
 					directory[last - 1] = '\0';
 				}
 				sprintf(p, "%s/%s", directory, ent->d_name);
 				find_path(p,path,i);
-			}
-			else if (ent->d_type == DT_REG)
-			{
+			} else if (ent->d_type == DT_REG) {
 				char p[4096] ;
 				int last = strlen(directory);
-				if(directory[last-1]=='/'){
+				if(directory[last-1]=='/') {
 					directory[last - 1] = '\0';
 				}
 				sprintf(p, "%s/%s", directory, ent->d_name);
 				//printf("%s\n",p);
 				int save = 0;
-				while (save==0)
-				{
-					if(strcmp(path[i],"")==0){
+				while (save==0) {
+					if(strcmp(path[i],"")==0) {
 						strcpy(path[i], p);
 						save = 1;
 					}
@@ -127,5 +124,5 @@ void find_path(char* directory, char(*path)[4096],int i){
 			}
 		}
 		closedir(dir);
-  	}
+	}
 }
