@@ -46,7 +46,7 @@ static ssize_t mailbox_read(struct kobject *kobj,
 			e = list_entry(ptr, struct mailbox_entry_t, entry);
 			*/
 			struct list_head *ptr;
-			list_for_each(ptr, &mail_head_ptr->head){
+			list_for_each(ptr, &mail_head_ptr->head) {
 				struct mailbox_entry_t *e;
 				e = list_entry(ptr, struct mailbox_entry_t, entry);
 				printk("Q: %s; P: %s\n",e->mail.data.query_word,e->mail.file_path);
