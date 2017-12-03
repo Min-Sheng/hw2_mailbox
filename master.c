@@ -6,12 +6,15 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include "string.h"
+#include "dirent.h"
+void find_path(char* directory, char (*path)[4096], int i);
 int main(int argc, char **argv)
 {
 	struct mail_t mail;
 	char ch;
 	char* word='\0';
 	char* directory='\0';
+	char path[1024][4096];
 	int K = 1;
 	while ((ch = getopt(argc, argv, "q:d:s:")) != EOF) {
 		switch (ch) {
@@ -33,11 +36,20 @@ int main(int argc, char **argv)
 		}
 
 	}
-	strcpy(mail.data.query_word,word);
-	strcpy(mail.file_path,directory);
-	int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
-	send_to_fd(sysfs_fd, &mail);
-	close(sysfs_fd);
+	int i = 0;
+	find_path(directory, path, i);
+	i = 0;
+	while (strcmp(path[i],"")!=0)
+	{
+		printf("%s\n", path[i]);
+		i++;
+	}
+
+	//strcpy(mail.data.query_word, word);
+	//strcpy(mail.file_path, path);
+	//int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
+	//send_to_fd(sysfs_fd, &mail);
+	//close(sysfs_fd);
 	//int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
 	//receive_from_fd(sysfs_fd, &mail);
 	//close(sysfs_fd);
@@ -77,4 +89,43 @@ int receive_from_fd(int sysfs_fd, struct mail_t *mail)
 		printf("%s\n",mail->file_path);
 		return 0;
 	}
+}
+
+void find_path(char* directory, char(*path)[4096],int i){
+	DIR* dir;
+	struct dirent *ent;
+	if ((dir = opendir(directory)) != NULL)
+	{
+		while (( ent = readdir(dir)) != NULL){
+      		if(ent->d_type == DT_DIR && strcmp(ent->d_name, ".") != 0  && strcmp(ent->d_name, "..") != 0){
+				char p[4096] ;
+				int last = strlen(directory);
+				if(directory[last-1]=='/'){
+					directory[last - 1] = '\0';
+				}
+				sprintf(p, "%s/%s", directory, ent->d_name);
+				find_path(p,path,i);
+			}
+			else if (ent->d_type == DT_REG)
+			{
+				char p[4096] ;
+				int last = strlen(directory);
+				if(directory[last-1]=='/'){
+					directory[last - 1] = '\0';
+				}
+				sprintf(p, "%s/%s", directory, ent->d_name);
+				//printf("%s\n",p);
+				int save = 0;
+				while (save==0)
+				{
+					if(strcmp(path[i],"")==0){
+						strcpy(path[i], p);
+						save = 1;
+					}
+					i++;
+				}
+			}
+		}
+		closedir(dir);
+  	}
 }
