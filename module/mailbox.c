@@ -39,12 +39,29 @@ static ssize_t mailbox_read(struct kobject *kobj,
 		return ERR_EMPTY;
 	} else {
 		if(strcmp(process_name,"slave")==0) {
+			/*
 			struct list_head *ptr;
 			struct mailbox_entry_t *e;
 			ptr = mail_head_ptr->head.next;
 			e = list_entry(ptr, struct mailbox_entry_t, entry);
+			*/
+			struct list_head *ptr;
+			list_for_each(ptr, &mail_head_ptr->head){
+				struct mailbox_entry_t *e;
+				e = list_entry(ptr, struct mailbox_entry_t, entry);
+				printk("Q: %s; P: %s\n",e->mail.data.query_word,e->mail.file_path);
+			}
+			/*
 			printk("Q: %s; P: %s\n",e->mail.data.query_word,e->mail.file_path);
-			//struct mail_t mail_temp = e->mail;
+			struct mail_t mail_temp = e->mail;
+			memset(buf,0,sizeof(struct mail_t));
+			memcpy(buf, &mail_temp, sizeof(struct mail_t));
+			*/
+			/*
+			memcpy(buf, &mail_temp.data.query_word, sizeof(mail_temp.data.query_word));
+			memcpy(buf + sizeof(mail_temp.data.query_word), &mail_temp.data.word_count, sizeof(mail_temp.data.word_count));
+			memcpy(buf + sizeof(mail_temp.data.query_word) + sizeof(mail_temp.data.word_count), &mail_temp.file_path, sizeof(mail_temp.file_path));
+			*/
 			//copy_to_user(buf, &mail_temp, sizeof(struct mail_t));
 			//list_del(&e->entry);
 			return 0;
