@@ -69,24 +69,22 @@ int receive_from_fd(int sysfs_fd, struct mail_t *mail)
 	}
 }
 
-int search_word(char*word,unsigned int *count, char *path){
+int search_word(char*word,unsigned int *count, char *path)
+{
 
 	FILE *fp;
 	fp = fopen(path,"r");
 	char buffer[256];
 	char * pch;
-	if (fp == NULL)
-	{
+	if (fp == NULL) {
 		printf("Failed to open: %s\n", path);
 		return -1;
-	}
-	else
-	{
-		while(fgets(buffer,256,fp)!=NULL){
+	} else {
+		while(fgets(buffer,256,fp)!=NULL) {
 			strtok(buffer, "\n");
 			pch = strtok(buffer, " ");
-			while (pch != NULL){
-				if(strcmp(pch,word)==0){
+			while (pch != NULL) {
+				if(strcmp(pch,word)==0) {
 					*count=*count+1;
 				}
 				pch = strtok (NULL, " ");
