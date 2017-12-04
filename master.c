@@ -39,27 +39,24 @@ int main(int argc, char **argv)
 	printf("Number of slaves = %d\n", K);
 	int num = 0;
 	pid_t pID;
-	for (num = 0; num < K;num++){
+	for (num = 0; num < K; num++) {
 		pID = fork();
-		 if(pID==0){
+		if(pID==0) {
 			if (execlp("./slave", "slave", (char *)0) == -1) {
 				fprintf(stderr,"Error: Unable to load the slave.\n");
 				return -1;
 			}
-		}
-        else if(pID<0){
-            fprintf(stderr,"Failed to fork.\n");
+		} else if(pID<0) {
+			fprintf(stderr,"Failed to fork.\n");
 			return -1;
-        }
-        else {
+		} else {
 			printf("master (PID: %d)\n", getpid());
 			int i = 0;
 			memset(path, 0, sizeof(path[0][0]) * 1024 * 4096);
 			find_path(directory, path, i);
 			int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
 			i = 0;
-			while (strcmp(path[i], "") != 0)
-			{
+			while (strcmp(path[i], "") != 0) {
 				struct mail_t mail;
 				strcpy(mail.data.query_word, word);
 				strcpy(mail.file_path, path[i]);
@@ -73,7 +70,7 @@ int main(int argc, char **argv)
 			//int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
 			//receive_from_fd(sysfs_fd, &mail);
 			//close(sysfs_fd);
-        }
+		}
 	}
 	return 0;
 }
