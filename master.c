@@ -1,56 +1,80 @@
 #include "master.h"
-#include "stdlib.h"
-#include "stdio.h"
-#include "unistd.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <fcntl.h>
-#include "string.h"
-#include "dirent.h"
+#include <string.h>
+#include <dirent.h>
+
 void find_path(char* directory, char (*path)[4096], int i);
 int main(int argc, char **argv)
 {
-	char ch;
 	char* word='\0';
 	char* directory='\0';
 	char path[1024][4096];
 	int K = 1;
+	char ch;
 	while ((ch = getopt(argc, argv, "q:d:s:")) != EOF) {
 		switch (ch) {
 		case 'q':
-			printf("-q %s\r\n", optarg);
+			//printf("-q %s\r\n", optarg);
 			word=optarg;
 			break;
 		case 'd':
-			printf("-d %s\r\n", optarg);
+			//printf("-d %s\r\n", optarg);
 			directory=optarg;
 			break;
 		case 's':
-			printf("-s %s\r\n", optarg);
+			//printf("-s %s\r\n", optarg);
 			K=atoi(optarg);
 			break;
 		default:
 			fprintf(stderr, "Unknown option: '%s'\n", optarg);
-			return 1;
+			return -1;
 		}
-
 	}
-	int i = 0;
-	find_path(directory, path, i);
-	int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
-	i = 0;
-	while (strcmp(path[i],"")!=0) {
-		struct mail_t mail;
-		strcpy(mail.data.query_word, word);
-		strcpy(mail.file_path, path[i]);
-		send_to_fd(sysfs_fd, &mail);
-		printf("%s\n", path[i]);
-		i++;
+	printf("Number of slaves = %d\n", K);
+	int num = 0;
+	pid_t pID;
+	for (num = 0; num < K;num++){
+		pID = fork();
+		 if(pID==0){
+			if (execlp("./slave", "slave", (char *)0) == -1) {
+				fprintf(stderr,"Error: Unable to load the slave.\n");
+				return -1;
+			}
+		}
+        else if(pID<0){
+            fprintf(stderr,"Failed to fork.\n");
+			return -1;
+        }
+        else {
+			printf("master (PID: %d)\n", getpid());
+			int i = 0;
+			memset(path, 0, sizeof(path[0][0]) * 1024 * 4096);
+			find_path(directory, path, i);
+			int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
+			i = 0;
+			while (strcmp(path[i], "") != 0)
+			{
+				struct mail_t mail;
+				strcpy(mail.data.query_word, word);
+				strcpy(mail.file_path, path[i]);
+				send_to_fd(sysfs_fd, &mail);
+				printf("(Master Send) Query Word: %s; File Path: %s\n", word, path[i]);
+				i++;
+			}
+			close(sysfs_fd);
+			int status = -1;
+			wait(&status);
+			//int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
+			//receive_from_fd(sysfs_fd, &mail);
+			//close(sysfs_fd);
+        }
 	}
-	close(sysfs_fd);
-	//int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
-	//receive_from_fd(sysfs_fd, &mail);
-	//close(sysfs_fd);
 	return 0;
 }
 int send_to_fd(int sysfs_fd, struct mail_t *mail)
@@ -78,7 +102,6 @@ int receive_from_fd(int sysfs_fd, struct mail_t *mail)
 	 */
 
 	int ret_val = read(sysfs_fd, mail, sizeof(struct mail_t));
-	printf("%d\n",ret_val);
 	if (ret_val < 0) {
 		printf("The mailbox is empty.\n");
 		return -1;
