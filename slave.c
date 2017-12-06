@@ -9,31 +9,37 @@
 int search_word(char *word, unsigned int *count, char *path);
 int main(int argc, char **argv)
 {
-	struct mail_t recieve_mail;
-	//struct mail_t send_mail;
-	//char word[32];
-	//unsigned int count=0;
-	//char path[4096];
-	printf("slave (PID: %d)\n", getpid());
-	int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
-	while(receive_from_fd(sysfs_fd, &recieve_mail)==-1);
-	//int ret_val = read(sysfs_fd, &recieve_mail, sizeof(struct mail_t));
-	//printf("%d\n", ret_val);
-	//printf("%s\n",recieve_mail.data.query_word);
-	//printf("%s\n",recieve_mail.file_path);
-	close(sysfs_fd);
-	//strcpy(recieve_mail.data.query_word,"apple");
-	//strcpy(recieve_mail.file_path,"./text_set/dir1/text1-1");
-	//strcpy(word,recieve_mail.data.query_word);
-	//strcpy(path,recieve_mail.file_path);
-	//printf("%s\n", word);
-	//printf("%s\n", path);
+	while(1) {
+		struct mail_t recieve_mail;
+		struct mail_t send_mail;
+		char word[32];
+		unsigned int count=0;
+		char path[4096];
+		//printf("slave (PID: %d)\n", getpid());
+		int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
+		while(receive_from_fd(sysfs_fd, &recieve_mail)==-1);
+		//int ret_val = read(sysfs_fd, &recieve_mail, sizeof(struct mail_t));
+		//printf("%d\n", ret_val);
+		//printf("%s\n",recieve_mail.data.query_word);
+		//printf("%s\n",recieve_mail.file_path);
+		close(sysfs_fd);
+		//printf("(Send recieve) Query Word: %s; File Path: %s\n", recieve_mail.data.query_word,recieve_mail.file_path);
+		//strcpy(recieve_mail.data.query_word,"apple");
+		//strcpy(recieve_mail.file_path,"./text_set/dir1/text1-1");
+		strcpy(word,recieve_mail.data.query_word);
+		strcpy(path,recieve_mail.file_path);
+		//printf("%s\n", word);
+		//printf("%s\n", path);
 
-	//search_word(word,&count,path);
-	//send_mail.data.word_count = count;
-	//strcpy(send_mail.file_path,path);
-	//printf("%d\n", send_mail.data.word_count);
-	//printf("%s\n", send_mail.file_path);
+		search_word(word,&count,path);
+		send_mail.data.word_count = count;
+		strcpy(send_mail.file_path,path);
+		//printf("%d\n", send_mail.data.word_count);
+		//printf("%s\n", send_mail.file_path);
+		sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
+		while(send_to_fd(sysfs_fd, &send_mail)==-1);
+		close(sysfs_fd);
+	}
 	return 0;
 }
 
@@ -61,15 +67,28 @@ int receive_from_fd(int sysfs_fd, struct mail_t *mail)
 	/*
 	 * write something or nothing
 	 */
-
-	int ret_val = read(sysfs_fd, mail, sizeof(struct mail_t));
+	char *input;
+	input = malloc(sizeof(struct mail_t));
+	int ret_val = read(sysfs_fd, input, sizeof(struct mail_t));
 	//printf("%d\n", ret_val);
 	if (ret_val < 0) {
 		//printf("The mailbox is empty.\n");
+		free(input);
 		return -1;
 	} else {
-		printf("(Slave Receive) Query Word: %s; ", mail->data.query_word);
-		printf("File Path: %s\n",mail->file_path);
+		//printf("input: %s\n", input);
+		char *word;
+		char *path;
+		word=strtok(input,"\n");
+		path=strtok(NULL,"\n");
+		//printf("word: %s; ", word);
+		//printf("path: %s\n; ", path);
+		strcpy(mail->data.query_word, word);
+		strcpy(mail->file_path, path);
+		//sscanf(input, "%s\0%s", mail->data.query_word, mail->file_path);
+		//printf("(Slave Receive) Query Word: %s; ", mail->data.query_word);
+		//printf("File Path: %s\n",mail->file_path);
+		free(input);
 		return 0;
 	}
 }
