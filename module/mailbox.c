@@ -12,6 +12,8 @@ static struct kobj_attribute mailbox_attribute
 
 static int num_entry_max = 2;
 
+static spinlock_t list_lock;
+
 static struct mailbox_head_t *mail_head_ptr;
 
 module_param(num_entry_max, int, S_IRUGO);
@@ -40,32 +42,40 @@ static ssize_t mailbox_read(struct kobject *kobj,
 	} else {
 		if(strcmp(process_name,"slave")==0) {
 			struct list_head *ptr;
-			struct mailbox_entry_t *e;
+			struct mailbox_entry_t *mail_entry_ptr;
+			spin_lock(&list_lock);
 			ptr = mail_head_ptr->head.next;
-			e = list_entry(ptr, struct mailbox_entry_t, entry);
-			/*
-			struct list_head *ptr;
-			list_for_each(ptr, &mail_head_ptr->head) {
-				struct mailbox_entry_t *e;
-				e = list_entry(ptr, struct mailbox_entry_t, entry);
-				printk("Q: %s; P: %s\n",e->mail.data.query_word,e->mail.file_path);
+			mail_entry_ptr = list_entry(ptr, struct mailbox_entry_t, entry);
+			if(mail_entry_ptr->recipient == 1) {
+				//printk("Q: %s; P: %s\n",mail_entry_ptr->mail.data.query_word,mail_entry_ptr->mail.file_path);
+				sprintf(buf, "%s%c%s", mail_entry_ptr->mail.data.query_word,'\n',
+				        mail_entry_ptr->mail.file_path);
+				list_del(ptr);
+				kfree(mail_entry_ptr);
+				spin_unlock(&list_lock);
+				return sizeof(struct mail_t);
+			} else {
+				spin_unlock(&list_lock);
+				return ERR_EMPTY;
 			}
-			*/
-			struct mail_t mail_temp = e->mail;
-			printk("Q: %s; P: %s\n",e->mail.data.query_word,e->mail.file_path);
-			sprintf(buf, "%s%s", mail_temp.data.query_word,mail_temp.file_path);
-			//list_del(&e->entry);
-			return sizeof(struct mail_t);
 		} else if(strcmp(process_name,"master")==0) {
 			struct list_head *ptr;
-			struct mailbox_entry_t *e;
+			struct mailbox_entry_t *mail_entry_ptr;
+			spin_lock(&list_lock);
 			ptr = mail_head_ptr->head.next;
-			e = list_entry(ptr, struct mailbox_entry_t, entry);
-			//struct mail_t mail_temp = e->mail;
-
-			//memcpy(buf, &mail_temp, sizeof(struct mail_t));
-			//list_del(&e->entry);
-			return sizeof(struct mail_t);
+			mail_entry_ptr = list_entry(ptr, struct mailbox_entry_t, entry);
+			if (mail_entry_ptr->recipient == 0) {
+				//printk("C: %d; P: %s\n",mail_entry_ptr->mail.data.word_count,mail_entry_ptr->mail.file_path);
+				sprintf(buf, "%d%c%s", mail_entry_ptr->mail.data.word_count,'\n',
+				        mail_entry_ptr->mail.file_path);
+				list_del(ptr);
+				kfree(mail_entry_ptr);
+				spin_unlock(&list_lock);
+				return sizeof(struct mail_t);
+			} else {
+				spin_unlock(&list_lock);
+				return ERR_EMPTY;
+			}
 		} else {
 			return -1;
 		}
@@ -84,17 +94,38 @@ static ssize_t mailbox_write(struct kobject *kobj,
 			struct mailbox_entry_t *mail_entry_ptr;
 			mail_entry_ptr=kmalloc(sizeof(struct mailbox_entry_t), GFP_KERNEL);
 			memcpy(&mail_entry_ptr->mail, buf, sizeof(struct mail_t));
-			list_add_tail(&mail_entry_ptr->entry,&mail_head_ptr->head);
+			mail_entry_ptr->recipient=1;
+			//printk("R: %d; Q: %s; P: %s\n", mail_entry_ptr->recipient, mail_entry_ptr->mail.data.query_word, mail_entry_ptr->mail.file_path);
+			spin_lock(&list_lock);
+			list_add_tail(&mail_entry_ptr->entry, &mail_head_ptr->head);
+			spin_unlock(&list_lock);
 			/*
 			struct list_head *ptr;
 			list_for_each(ptr, &mail_head_ptr->head){
 				struct mailbox_entry_t *e;
 				e = list_entry(ptr, struct mailbox_entry_t, entry);
-				printk("Q: %s; P: %s\n",e->mail.data.query_word,e->mail.file_path);
+				printk("R: %d; Q: %s; P: %s\n",
+				e->recipient,
+				e->mail.data.query_word,e->mail.file_path);
 			}
 			*/
 			return sizeof(struct mail_t);
 		} else if(strcmp(process_name,"slave")==0) {
+			struct mailbox_entry_t *mail_entry_ptr;
+			mail_entry_ptr=kmalloc(sizeof(struct mailbox_entry_t), GFP_KERNEL);
+			memcpy(&mail_entry_ptr->mail, buf, sizeof(struct mail_t));
+			mail_entry_ptr->recipient=0;
+			spin_lock(&list_lock);
+			list_add_tail(&mail_entry_ptr->entry, &mail_head_ptr->head);
+			spin_unlock(&list_lock);
+			/*
+			struct list_head *ptr;
+			list_for_each(ptr, &mail_head_ptr->head){
+				struct mailbox_entry_t *e;
+				e = list_entry(ptr, struct mailbox_entry_t, entry);
+				printk("C: %d; P: %s\n",e->mail.data.word_count,e->mail.file_path);
+			}
+			*/
 			return sizeof(struct mail_t);
 		} else {
 			return -1;
@@ -109,6 +140,7 @@ static int __init mailbox_init(void)
 	sysfs_create_file(hw2_kobject, &mailbox_attribute.attr);
 	mail_head_ptr = kmalloc(sizeof(struct mailbox_head_t),GFP_KERNEL);
 	INIT_LIST_HEAD(&mail_head_ptr->head);
+	spin_lock_init(&list_lock);
 	return 0;
 }
 

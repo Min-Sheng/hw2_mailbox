@@ -32,6 +32,7 @@ struct mailbox_head_t {
 };
 
 struct mailbox_entry_t {
+	int recipient;
 	struct mail_t mail;
 	struct list_head entry;
 };
