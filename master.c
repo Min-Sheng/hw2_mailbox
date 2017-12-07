@@ -9,7 +9,6 @@
 #include <string.h>
 #include <dirent.h>
 #include <signal.h>
-int complete = 0;
 void find_path(char *directory, char (*path)[4096], int i);
 int main(int argc, char **argv)
 {
@@ -60,7 +59,6 @@ int main(int argc, char **argv)
 	int i = 0;
 	memset(path, 0, sizeof(path[0][0]) * 1024 * 4096);
 	find_path(directory, path, i);
-	int all = i;
 	i = 0;
 	while (strcmp(path[i], "") != 0) {
 		struct mail_t send_mail;
@@ -73,13 +71,11 @@ int main(int argc, char **argv)
 		sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
 		while(receive_from_fd(sysfs_fd, &recieve_mail)==-1);
 		close(sysfs_fd);
+		printf("\" %d \" \" %s \" in \" %s \".\n", recieve_mail.data.word_count, word, recieve_mail.file_path);
 		//printf("(Master recieve) Word Count: %d; File Path: %s\n", recieve_mail.data.word_count,recieve_mail.file_path);
-		total = total + recieve_mail.data.word_count;
-		complete++;
 		//printf("(Master Send) Query Word: %s; File Path: %s\n", word, path[i]);
+		total = total + recieve_mail.data.word_count;
 		i++;
-		if(complete==all)
-			break;
 	}
 	printf("The total number of query word \" %s \" is \" %d \".\n", word, total);
 	for( num = 0; num < K; num++) {
