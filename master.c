@@ -47,19 +47,17 @@ int main(int argc, char **argv)
 		if(pID==0) {
 			Child_pID[num]=getpid();
 			break;
-		}
-		else if (pID < 0)
-		{
+		} else if (pID < 0) {
 			fprintf(stderr,"Failed to fork.\n");
 			return -1;
 		}
 	}
-	if(pID==0){
+	if(pID==0) {
 		if (execlp("./slave", "slave", (char *)0) == -1) {
-				fprintf(stderr,"Error: Unable to load the slave.\n");
-				return -1;
-			}
-	}else{
+			fprintf(stderr,"Error: Unable to load the slave.\n");
+			return -1;
+		}
+	} else {
 		char path[1024][4096];
 		//printf("master (PID: %d)\n", getpid());
 		int i = 0;
