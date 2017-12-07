@@ -71,7 +71,8 @@ int main(int argc, char **argv)
 		sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
 		while(receive_from_fd(sysfs_fd, &recieve_mail)==-1);
 		close(sysfs_fd);
-		printf("\" %d \" \" %s \" in \" %s \".\n", recieve_mail.data.word_count, word, recieve_mail.file_path);
+		printf("\" %d \" \" %s \" in \" %s \".\n", recieve_mail.data.word_count, word,
+		       recieve_mail.file_path);
 		//printf("(Master recieve) Word Count: %d; File Path: %s\n", recieve_mail.data.word_count,recieve_mail.file_path);
 		//printf("(Master Send) Query Word: %s; File Path: %s\n", word, path[i]);
 		total = total + recieve_mail.data.word_count;
