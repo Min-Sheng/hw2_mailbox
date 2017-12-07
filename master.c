@@ -42,8 +42,7 @@ int main(int argc, char **argv)
 	pid_t pID;
 	pid_t *Child_pID;
 	Child_pID = malloc(K * sizeof(pid_t));
-	for (num = 0; num < K; num++)
-	{
+	for (num = 0; num < K; num++) {
 		pID = fork();
 		if(pID==0) {
 			Child_pID[num]=getpid();
@@ -83,7 +82,7 @@ int main(int argc, char **argv)
 			break;
 	}
 	printf("The total number of query word \" %s \" is \" %d \".\n", word, total);
-	for( num = 0; num < K; num++){
+	for( num = 0; num < K; num++) {
 		kill(Child_pID[num], SIGTERM);
 	}
 	free(Child_pID);
