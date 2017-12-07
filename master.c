@@ -46,47 +46,53 @@ int main(int argc, char **argv)
 		pID = fork();
 		if(pID==0) {
 			Child_pID[num]=getpid();
-			if (execlp("./slave", "slave", (char *)0) == -1) {
-				fprintf(stderr,"Error: Unable to load the slave.\n");
-				return -1;
-			}
-		} else if(pID<0) {
+			break;
+		}
+		else if (pID < 0)
+		{
 			fprintf(stderr,"Failed to fork.\n");
 			return -1;
 		}
 	}
-	char path[1024][4096];
-	//printf("master (PID: %d)\n", getpid());
-	int i = 0;
-	memset(path, 0, sizeof(path[0][0]) * 1024 * 4096);
-	find_path(directory, path, i);
-	int all = i;
-	i = 0;
-	while (strcmp(path[i], "") != 0) {
-		struct mail_t send_mail;
-		strcpy(send_mail.data.query_word, word);
-		strcpy(send_mail.file_path, path[i]);
-		int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
-		while(send_to_fd(sysfs_fd, &send_mail)==-1);
-		close(sysfs_fd);
-		struct mail_t recieve_mail;
-		sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
-		while(receive_from_fd(sysfs_fd, &recieve_mail)==-1);
-		close(sysfs_fd);
-		//printf("(Master recieve) Word Count: %d; File Path: %s\n", recieve_mail.data.word_count,recieve_mail.file_path);
-		total = total + recieve_mail.data.word_count;
-		complete++;
-		//printf("(Master Send) Query Word: %s; File Path: %s\n", word, path[i]);
-		i++;
-		if(complete==all)
-			break;
+	if(pID==0){
+		if (execlp("./slave", "slave", (char *)0) == -1) {
+				fprintf(stderr,"Error: Unable to load the slave.\n");
+				return -1;
+			}
+	}else{
+		char path[1024][4096];
+		//printf("master (PID: %d)\n", getpid());
+		int i = 0;
+		memset(path, 0, sizeof(path[0][0]) * 1024 * 4096);
+		find_path(directory, path, i);
+		int all = i;
+		i = 0;
+		while (strcmp(path[i], "") != 0) {
+			struct mail_t send_mail;
+			strcpy(send_mail.data.query_word, word);
+			strcpy(send_mail.file_path, path[i]);
+			int sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
+			while(send_to_fd(sysfs_fd, &send_mail)==-1);
+			close(sysfs_fd);
+			struct mail_t recieve_mail;
+			sysfs_fd = open("/sys/kernel/hw2/mailbox", O_RDWR, 0666);
+			while(receive_from_fd(sysfs_fd, &recieve_mail)==-1);
+			close(sysfs_fd);
+			//printf("(Master recieve) Word Count: %d; File Path: %s\n", recieve_mail.data.word_count,recieve_mail.file_path);
+			total = total + recieve_mail.data.word_count;
+			complete++;
+			//printf("(Master Send) Query Word: %s; File Path: %s\n", word, path[i]);
+			i++;
+			if(complete==all)
+				break;
+		}
+		printf("The total number of query word \" %s \" is \" %d \".\n", word, total);
+		for( num = 0; num < K; num++) {
+			kill(Child_pID[num], SIGTERM);
+		}
+		free(Child_pID);
+		return 0;
 	}
-	printf("The total number of query word \" %s \" is \" %d \".\n", word, total);
-	for( num = 0; num < K; num++) {
-		kill(Child_pID[num], SIGTERM);
-	}
-	free(Child_pID);
-	return 0;
 }
 int send_to_fd(int sysfs_fd, struct mail_t *mail)
 {
